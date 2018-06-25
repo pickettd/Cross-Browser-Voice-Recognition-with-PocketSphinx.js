@@ -12,6 +12,7 @@ var keywordIndicator = document.getElementById('recording_indicator');
 
 // TEMP
 var outputContainer;
+var timerContainer;
 
 // the phones we want to detect
 var wordList = [
@@ -99,6 +100,23 @@ var grammars = [{
 		}]
 	}
 }];
+var startTime = 0;
+var hitStop = false;
+var intervalId;
+var startTimer = function() {
+	startTime = new Date().getTime();
+	intervalId = setInterval(function(){ timerContainer.innerHTML = new Date().getTime() - startTime; }, 1);
+}
+
+var stopTimer = function() {
+	hitStop = true;
+	clearInterval(intervalId);
+}
+
+var hitStart = function() {
+	hitStop = false;
+	startTimer();
+}
 
 // When the page is loaded we spawn a new recognizer worker and call getUserMedia to request access to the microphone
 window.onload = function() {
@@ -109,7 +127,13 @@ window.onload = function() {
 
 	// TEMP
 	outputContainer = document.getElementById("output");
-	// document.getElementById('start_button').onclick = startRecording;
+	timerContainer = document.getElementById("timer");
+	if (timerContainer) {
+		timerContainer.innerHTML = 0;
+	}
+
+	document.getElementById('start_button').onclick = hitStart;
+	document.getElementById('stop_button').onclick = stopTimer;
 
 	// initialize Web Audio variables
 	try {
@@ -179,8 +203,11 @@ window.onload = function() {
 
 				var hypothesis = e.data.hyp;
 
-				if (outputContainer) {
+				if (outputContainer && !hitStop) {
 					outputContainer.innerHTML = hypothesis;
+				}
+				if (hypothesis && timerContainer.innerHTML == 0) {
+					startTimer();
 				}
 
 			}
